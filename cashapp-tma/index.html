@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CashBack Pro | Рабочее приложение</title>
+    <script src="https://telegram.org/js/twa.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --success: #2ec4b6;
+            --dark: #1d3557;
+            --light: #f8f9fa;
+            --card-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        body {
+            background-color: #f0f2f5;
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-bottom: 80px;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding: 15px 0;
+        }
+        
+        .logo {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .balance-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+        }
+        
+        .balance-amount {
+            font-size: 42px;
+            font-weight: 800;
+            margin: 15px 0;
+            color: var(--dark);
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 14px 24px;
+            background: var(--primary);
+            color: white;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        
+        .shops-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .shop-card {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: var(--card-shadow);
+            cursor: pointer;
+        }
+        
+        .shop-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        .shop-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .shop-cashback {
+            font-size: 14px;
+            color: var(--success);
+            font-weight: 700;
+        }
+        
+        .history-item {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .transaction-info {
+            flex-grow: 1;
+        }
+        
+        .transaction-amount {
+            font-weight: 700;
+            color: var(--success);
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-item {
+            text-align: center;
+            color: #6c757d;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">CashBack Pro</div>
+            <div class="user-avatar" id="userAvatar">U</div>
+        </header>
+        
+        <div class="balance-card">
+            <h2>Ваш баланс</h2>
+            <div class="balance-amount" id="balance">0 ₽</div>
+            <button class="btn" id="withdrawBtn">Вывести деньги</button>
+        </div>
+        
+        <h2>Магазины с кешбеком</h2>
+        <div class="shops-grid" id="shopsGrid">
+            <!-- Магазины будут добавлены через JS -->
+        </div>
+        
+        <h2>История операций</h2>
+        <div id="historyList">
+            <!-- История будет добавлена через JS -->
+        </div>
+    </div>
+    
+    <div class="bottom-nav">
+        <a href="#" class="nav-item">
+            <div class="nav-icon"><i class="fas fa-home"></i></div>
+            <div>Главная</div>
+        </a>
+        <a href="#" class="nav-item">
+            <div class="nav-icon"><i class="fas fa-store"></i></div>
+            <div>Магазины</div>
+        </a>
+        <a href="#" class="nav-item">
+            <div class="nav-icon"><i class="fas fa-history"></i></div>
+            <div>История</div>
+        </a>
+    </div>
+
+    <script>
+        // =====================
+        // РАБОЧЕЕ ПРИЛОЖЕНИЕ
+        // =====================
+        
+        // Инициализация Telegram WebApp
+        const webApp = Telegram.WebApp;
+        
+        // Основные настройки
+        webApp.ready();
+        webApp.expand();
+        webApp.BackButton.show();
+        
+        // Закрытие приложения по кнопке "Назад"
+        webApp.BackButton.onClick(() => {
+            webApp.close();
+        });
+        
+        // Данные пользователя
+        let userData = {
+            balance: 0,
+            history: []
+        };
+        
+        // Магазины с кешбеком
+        const shops = [
+            { id: 'wb', name: 'Wildberries', cashback: '15%', icon: 'fab fa-windows' },
+            { id: 'ozon', name: 'Ozon', cashback: '10%', icon: 'fas fa-shopping-bag' },
+            { id: 'aliexpress', name: 'AliExpress', cashback: '8%', icon: 'fab fa-alipay' },
+            { id: 'lamoda', name: 'Lamoda', cashback: '12%', icon: 'fas fa-tshirt' },
+            { id: 'mvideo', name: 'М.Видео', cashback: '7%', icon: 'fas fa-tv' },
+            { id: 'yandex', name: 'Яндекс.Маркет', cashback: '9%', icon: 'fab fa-yandex' }
+        ];
+        
+        // Инициализация пользователя
+        function initUser() {
+            if (webApp.initDataUnsafe.user) {
+                const user = webApp.initDataUnsafe.user;
+                
+                // Генерация аватара
+                const firstNameLetter = user.first_name ? user.first_name.charAt(0) : 'U';
+                document.getElementById('userAvatar').textContent = firstNameLetter;
+                
+                // Загрузка данных пользователя (в реальном приложении - с сервера)
+                loadUserData(user.id);
+            } else {
+                // Для демо-режима
+                document.getElementById('balance').textContent = '1,840 ₽';
+                renderShops();
+                renderHistory([
+                    { shop: 'Wildberries', amount: 189, date: 'Сегодня, 14:30' },
+                    { shop: 'Ozon', amount: 347, date: 'Вчера, 19:45' }
+                ]);
+            }
+        }
+        
+        // Загрузка данных пользователя (заглушка)
+        function loadUserData(userId) {
+            // В реальном приложении здесь будет fetch к вашему API
+            setTimeout(() => {
+                userData = {
+                    balance: 1840,
+                    history: [
+                        { shop: 'Wildberries', amount: 189, date: 'Сегодня, 14:30' },
+                        { shop: 'Ozon', amount: 347, date: 'Вчера, 19:45' },
+                        { shop: 'Вывод средств', amount: -1000, date: '12 июля, 16:15' }
+                    ]
+                };
+                
+                updateUI();
+            }, 500);
+        }
+        
+        // Обновление интерфейса
+        function updateUI() {
+            document.getElementById('balance').textContent = `${userData.balance} ₽`;
+            renderShops();
+            renderHistory(userData.history);
+        }
+        
+        // Отображение магазинов
+        function renderShops() {
+            const shopsGrid = document.getElementById('shopsGrid');
+            shopsGrid.innerHTML = '';
+            
+            shops.forEach(shop => {
+                const shopCard = document.createElement('div');
+                shopCard.className = 'shop-card';
+                shopCard.innerHTML = `
+                    <div class="shop-icon"><i class="${shop.icon}"></i></div>
+                    <div class="shop-name">${shop.name}</div>
+                    <div class="shop-cashback">${shop.cashback}</div>
+                `;
+                
+                shopCard.addEventListener('click', () => {
+                    openShop(shop.id);
+                });
+                
+                shopsGrid.appendChild(shopCard);
+            });
+        }
+        
+        // Открытие магазина
+        function openShop(shopId) {
+            const shop = shops.find(s => s.id === shopId);
+            
+            webApp.showPopup({
+                title: shop.name,
+                message: `Кешбек: ${shop.cashback}\n\nЧтобы получить кешбек, совершайте покупки через нашего бота.`,
+                buttons: [
+                    { id: 'open', type: 'default', text: 'Открыть магазин' },
+                    { type: 'cancel' }
+                ]
+            }).then(btnId => {
+                if (btnId === 'open') {
+                    // Открываем магазин
+                    const shopUrls = {
+                        wb: 'https://www.wildberries.ru',
+                        ozon: 'https://www.ozon.ru',
+                        aliexpress: 'https://aliexpress.ru'
+                    };
+                    
+                    if (shopUrls[shopId]) {
+                        webApp.openLink(shopUrls[shopId]);
+                    } else {
+                        webApp.showAlert('Магазин будет открыт в браузере');
+                    }
+                }
+            });
+        }
+        
+        // Отображение истории операций
+        function renderHistory(transactions) {
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+            
+            transactions.forEach(transaction => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                
+                item.innerHTML = `
+                    <div class="transaction-info">
+                        <div>${transaction.shop}</div>
+                        <div style="font-size: 12px; color: #6c757d;">${transaction.date}</div>
+                    </div>
+                    <div class="transaction-amount">
+                        ${transaction.amount > 0 ? '+' : ''}${transaction.amount} ₽
+                    </div>
+                `;
+                
+                historyList.appendChild(item);
+            });
+        }
+        
+        // Вывод средств
+        document.getElementById('withdrawBtn').addEventListener('click', () => {
+            webApp.showPopup({
+                title: 'Вывод средств',
+                message: 'Минимальная сумма вывода: 500 ₽\nВыберите способ:',
+                buttons: [
+                    { id: 'card', type: 'default', text: '💳 На карту' },
+                    { id: 'wallet', type: 'default', text: '👛 На кошелек' },
+                    { type: 'cancel' }
+                ]
+            }).then(btnId => {
+                if (btnId === 'card') {
+                    requestWithdrawal('card');
+                } else if (btnId === 'wallet') {
+                    requestWithdrawal('wallet');
+                }
+            });
+        });
+        
+        // Запрос на вывод средств
+        function requestWithdrawal(method) {
+            if (userData.balance < 500) {
+                webApp.showAlert('Минимальная сумма вывода 500 ₽');
+                return;
+            }
+            
+            webApp.showPopup({
+                title: 'Подтверждение',
+                message: `Вывод ${userData.balance} ₽ на ${method === 'card' ? 'карту' : 'кошелек'}?`,
+                buttons: [
+                    { id: 'confirm', type: 'destructive', text: 'Подтвердить' },
+                    { type: 'cancel' }
+                ]
+            }).then(btnId => {
+                if (btnId === 'confirm') {
+                    // В реальном приложении здесь будет запрос к API
+                    webApp.showAlert('Запрос на вывод отправлен! Средства поступят в течение 3 рабочих дней.');
+                    
+                    // Обновляем баланс
+                    userData.balance = 0;
+                    updateUI();
+                }
+            });
+        }
+        
+        // Инициализация приложения
+        initUser();
+    </script>
+</body>
+</html>
